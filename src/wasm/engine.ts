@@ -169,6 +169,14 @@ export function turkishPhrases(text: string): Phrase[] {
   return call("trPhrases", { text });
 }
 
+/**
+ * German text → phrases of segments, by spelling rules with no dictionary
+ * (crates/chimera/src/phonetics/german.rs).
+ */
+export function germanPhrases(text: string): Phrase[] {
+  return call("dePhrases", { text });
+}
+
 // ------------------------------------------------------------------ planning
 
 export interface PlanOptions {

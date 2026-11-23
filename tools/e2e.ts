@@ -155,6 +155,11 @@ async function run(viewport: { width: number; height: number }, tag: string) {
   const speakAgain = { chip: await tr(".right-speak").getAttribute("aria-pressed"), box: await sayBox.inputValue() };
   logs.push(`[${tag}] language: TR in Speak, in Sing ${inSing}; Speak again ${JSON.stringify(speakAgain)}`);
   if (inSing !== "true" || speakAgain.chip !== "true" || speakAgain.box !== "Merhaba, nasılsın?") errors.push(`[${tag}] Speak and Sing don't share the language (Sing ${inSing}, Speak again ${JSON.stringify(speakAgain)})`);
+  // DE: the Turkish example gives way to the German one, and Sing shows DE lit
+  await page.locator(".right-speak").getByRole("button", { name: "German" }).click();
+  const deBox = await sayBox.inputValue();
+  logs.push(`[${tag}] language: DE in Speak, box ${JSON.stringify(deBox)}`);
+  if (deBox !== "Guten Tag! Wie geht es dir?") errors.push(`[${tag}] choosing DE kept ${JSON.stringify(deBox)} in Speak's box`);
   await page.locator(".right-speak").getByRole("button", { name: "English" }).click();
   // sing mode: a key sings the marked syllable and moves the cursor; legato; a demo song
   await page.getByRole("radio", { name: "Sing" }).click();

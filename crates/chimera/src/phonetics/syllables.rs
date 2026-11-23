@@ -7,8 +7,8 @@
 //! vowels), are split into syllables by the maximal-onset principle with English onset clusters,
 //! and the spelling is split to match for display ("twin-kle"). Hangul words go to
 //! [`super::korean`], one syllable per block, Cyrillic words to [`super::russian`]. Latin script
-//! is English unless the player chooses Turkish ([`Lang`], [`super::turkish`]): the script can't
-//! tell them apart. Typed hyphens force syllable breaks; a lone "-" (or
+//! is English unless the player chooses Turkish or German ([`Lang`], [`super::turkish`],
+//! [`super::german`]): the script can't tell them apart. Typed hyphens force syllable breaks; a lone "-" (or
 //! "~") holds the previous vowel onto the next note (melisma), as in vocaloid editors.
 
 use crate::anatomy::human::BodyMix;
@@ -17,6 +17,7 @@ use super::korean::Korean;
 use super::mandarin::{Mandarin, MandarinLexicon, Pinyin};
 use super::russian::Russian;
 use super::turkish::Turkish;
+use super::german::German;
 use super::planner::is_vowel;
 use super::{Segment, Syllable};
 use serde::{Deserialize, Serialize};
@@ -327,23 +328,26 @@ pub fn lyrics_to_syllables_with(text: &str, g2p: &impl WordSource, zh: &Mandarin
 }
 
 /// The language Latin-script lyrics are in. The router tells languages apart by script, which
-/// can't tell Turkish from English, so the player chooses; other scripts are routed as usual.
+/// can't tell Turkish or German from English, so the player chooses; other scripts are routed as
+/// usual.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Lang {
     #[default]
     En,
     Tr,
+    De,
 }
 
 /// Lyrics → sung syllables through every built-in front end, with Latin script read as `lang`:
 /// pinyin (only words with tones; before the Latin-script language, which shares its alphabet),
-/// English (`g2p`) or Turkish, Korean, Russian, and Mandarin with its lexicon (empty: Han
+/// English (`g2p`), Turkish or German, Korean, Russian, and Mandarin with its lexicon (empty: Han
 /// characters are skipped). The one list the app, the wasm engine and the CLI all read lyrics
 /// through, so a new front end can't be missing from one of them.
 pub fn lyrics_in(text: &str, g2p: &impl WordSource, zh: &MandarinLexicon, lang: Lang) -> Vec<Syllable> {
     match lang {
         Lang::En => read_lyrics(text, &[&Pinyin, &English(g2p), &Korean, &Russian, &Mandarin(zh)]),
         Lang::Tr => read_lyrics(text, &[&Pinyin, &Turkish, &Korean, &Russian, &Mandarin(zh)]),
+        Lang::De => read_lyrics(text, &[&Pinyin, &German, &Korean, &Russian, &Mandarin(zh)]),
     }
 }
