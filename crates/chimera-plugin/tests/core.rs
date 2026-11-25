@@ -1223,3 +1223,19 @@ fn clipboard_shortcuts_reach_the_editor() {
     }
     assert_eq!(*seen.lock().unwrap(), [EditAction::Cut, EditAction::Copy, EditAction::Paste, EditAction::SelectAll]);
 }
+
+#[test]
+fn german_lyrics_are_read_as_german_and_old_projects_stay_english() {
+    use chimera::phonetics::syllables::Lang;
+    let shared = Shared::default();
+    let text = "ich bin eine Stimme";
+    let de = Prepared::of(&Settings { lyrics: text.into(), lang: Lang::De, ..Default::default() }, &shared).syllables;
+    let en = Prepared::of(&Settings { lyrics: text.into(), ..Default::default() }, &shared).syllables;
+    let ipa = |s: &[Syllable]| serde_json::to_string(s).unwrap();
+    assert!(ipa(&de).contains('ç'), "the German front end reads \"ich\" with /ç/: {}", ipa(&de));
+    assert_ne!(ipa(&de), ipa(&en), "German lyrics were read as English");
+    // a project saved before the plugin knew languages has no `lang`
+    let mut old = serde_json::to_value(Settings::default()).unwrap();
+    old.as_object_mut().unwrap().remove("lang");
+    assert_eq!(serde_json::from_value::<Settings>(old).unwrap().lang, Lang::En);
+}

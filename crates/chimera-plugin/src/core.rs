@@ -16,7 +16,8 @@ use chimera::math::{midi_to_hz, pow};
 use chimera::phonetics::Syllable;
 use chimera::phonetics::beatbox::{BEAT_PRESETS, BeatStep, parse_beat};
 use chimera::phonetics::sing::LiveSyllable;
-use chimera::phonetics::syllables::lyrics_to_syllables;
+use chimera::phonetics::mandarin::MandarinLexicon;
+use chimera::phonetics::syllables::{Lang, lyrics_in};
 use chimera::voice::human_voice::{HumanVoice, SourcePatch, TELE_LABELS, VoiceTelemetry};
 use serde::{Deserialize, Serialize};
 
@@ -137,6 +138,8 @@ struct Hum {
 pub struct Settings {
     pub version: u32,
     pub lyrics: String,
+    /// the language Latin-script lyrics are read in (a project saved before it had one: English)
+    pub lang: Lang,
     pub body: BodyMix,
     pub mode: Mode,
     /// the articulators changed from neutral
@@ -153,7 +156,7 @@ pub struct Settings {
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { version: 1, lyrics: DEFAULT_LYRICS.to_string(), body: BodyMix::MALE, mode: Mode::Sing, artic: ArticPatch::default(), tip_free: true, voiced: true, f0: 110.0, start_syllable: 0, speech: SpeechSettings::default(), beat: BeatSettings::default() }
+        Settings { version: 1, lyrics: DEFAULT_LYRICS.to_string(), lang: Lang::En, body: BodyMix::MALE, mode: Mode::Sing, artic: ArticPatch::default(), tip_free: true, voiced: true, f0: 110.0, start_syllable: 0, speech: SpeechSettings::default(), beat: BeatSettings::default() }
     }
 }
 
@@ -252,6 +255,12 @@ struct NewSpeech {
     reset: bool,
 }
 
+/// Lyrics → sung syllables, with Latin script read as `lang`, as the browser reads them. Han
+/// characters are skipped: the plugin has no Mandarin lexicon.
+pub fn read_lyrics(text: &str, lang: Lang) -> Vec<Syllable> {
+    lyrics_in(text, g2p(), &MandarinLexicon::new(), lang)
+}
+
 /// What's worked out from a project's text, off the audio thread.
 pub struct Prepared {
     pub syllables: Vec<Syllable>,
@@ -261,7 +270,7 @@ pub struct Prepared {
 
 impl Prepared {
     pub fn of(settings: &Settings, shared: &Shared) -> Prepared {
-        Prepared { syllables: lyrics_to_syllables(&settings.lyrics, g2p()), speech: plan_lines(&settings.speech, settings.body, g2p()), generation: shared.next_generation() }
+        Prepared { syllables: read_lyrics(&settings.lyrics, settings.lang), speech: plan_lines(&settings.speech, settings.body, g2p()), generation: shared.next_generation() }
     }
 }
 

@@ -11,6 +11,7 @@ import type { ToWorklet, FromWorklet, TelemetryMessage, PlannedMessage, Creature
 import type { BodyMix } from "../wasm/types.ts";
 import type { HumanArtic } from "../wasm/types.ts";
 import type { VoiceSource } from "../wasm/types.ts";
+import type { Lang } from "../wasm/types.ts";
 
 type Listener = (t: TelemetryMessage) => void;
 
@@ -377,6 +378,10 @@ export class AudioEngine {
 
   pluginLyrics(text: string): void {
     ipc({ type: "lyrics", text });
+  }
+
+  pluginLang(lang: Lang): void {
+    ipc({ type: "lang", lang });
   }
 
   pluginCursor(index: number): void {

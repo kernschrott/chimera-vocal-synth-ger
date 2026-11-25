@@ -12,13 +12,13 @@ use chimera::control::beat_player::BeatPlayer;
 use chimera::control::score::Label;
 use chimera::engine::{Engine, default_f0};
 use chimera::phonetics::beatbox::{BeatStep, beat_ready};
-use chimera::phonetics::syllables::lyrics_to_syllables;
+use chimera::phonetics::syllables::Lang;
 use chimera::voice::human_voice::{SourcePatch, TELE_LABELS};
 use nih_plug::params::internals::ParamPtr;
 use nih_plug::prelude::{GuiContext, Params};
 use serde::Deserialize;
 
-use crate::core::{MIN_SAMPLE_RATE, Mode, Shared, UiNote};
+use crate::core::{MIN_SAMPLE_RATE, Mode, Shared, UiNote, read_lyrics};
 use crate::speech::{plan_lines, plan_pad};
 use crate::{ChimeraParams, g2p};
 
@@ -140,6 +140,8 @@ struct Envelope {
 enum Command {
     Note { midi: u8, on: bool, velocity: Option<f64> },
     Lyrics { text: String },
+    /// the language Latin-script lyrics are read in
+    Lang { lang: Lang },
     Cursor { index: usize },
     Body { body: BodyMix },
     Mode { mode: Mode },
@@ -357,12 +359,21 @@ impl Bridge {
         match cmd {
             Command::Note { midi, on, velocity } => shared.ui_note(UiNote { midi: midi.min(127), velocity: velocity.unwrap_or(96.0), on }),
             Command::Lyrics { text } => {
-                let syllables = lyrics_to_syllables(&text, g2p());
+                let syllables = read_lyrics(&text, settings().lang);
                 {
                     let mut s = settings();
                     s.lyrics = text;
                     s.start_syllable = 0;
                 }
+                shared.send_lyrics(syllables);
+            }
+            Command::Lang { lang } => {
+                let syllables = {
+                    let mut s = settings();
+                    s.lang = lang;
+                    s.start_syllable = 0;
+                    read_lyrics(&s.lyrics, lang)
+                };
                 shared.send_lyrics(syllables);
             }
             Command::Cursor { index } => {

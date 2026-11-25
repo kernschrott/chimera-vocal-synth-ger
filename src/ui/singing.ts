@@ -124,6 +124,12 @@ export const useSing = create<SingState>((set, get) => ({
   setLang: (lang) => {
     const s = get();
     if (lang === s.lang) return;
+    if (inPlugin) {
+      // Rust reads the lyrics again: the syllables come back with the next polls
+      set({ lang });
+      engine.pluginLang(lang);
+      return;
+    }
     stopDemo();
     // the other language's opening words give way to this one's
     const lyrics = s.lyrics === DEFAULT_LYRICS_OF[s.lang] ? DEFAULT_LYRICS_OF[lang] : s.lyrics;
