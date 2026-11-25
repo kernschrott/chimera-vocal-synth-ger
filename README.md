@@ -1,5 +1,10 @@
 # CHIMERA
 
+> **Personal fork** of [jamesondh/chimera-vocal-synth](https://github.com/jamesondh/chimera-vocal-synth)
+> with German speech and singing added (branch `lang/german`, see [docs/german.md](docs/german.md)).
+> It is not the original project and is not maintained by its author; the German support is not
+> planned for upstream. Licensed under MIT like the original ([LICENSE](LICENSE)).
+
 A physical-modeling voice synthesizer in the browser. Every sound comes from a simulated
 airway (lungs, vocal folds or syrinx, a branched vocal tract, lips, nose), not from samples.
 The engine is Rust, compiled to WebAssembly for an AudioWorklet; the same code runs natively
